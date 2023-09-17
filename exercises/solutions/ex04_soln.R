@@ -39,7 +39,6 @@ shinyApp(
         names()
     })
     
-    
     output$plot = renderPlot({
       req(input$var)
       d_city() |>

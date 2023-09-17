@@ -18,7 +18,7 @@ shinyApp(
         ),
         selectInput(
           "var", "Select a variable",
-          choices = c()
+          choices = NULL
           # , 
           # selected = "temp"
         )
@@ -40,13 +40,14 @@ shinyApp(
     })
     
     d_vars = reactive({
-      d |>
+      d_city() |>
         select(where(is.numeric)) |>
         select(where(function(x) var(x) != 0)) |>
         names()      
     })  
 
     output$plot = renderPlot({
+      req(input$var)
       d_city() |>
         ggplot(aes(x=time, y=.data[[input$var]], color=city)) +
         ggtitle(input$var) +

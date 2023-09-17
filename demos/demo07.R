@@ -34,19 +34,39 @@ shinyApp(
   server = function(input, output, session) {
     
     observe({
-      showModal(modalDialog(
-        title = "Download data",
-        checkboxGroupInput(
-          "dl_vars", "Select variables to download",
-          choices = names(d), selected = names(d), inline = TRUE
-        ),
-        footer = list(
-          downloadButton("download"),
-          modalButton("Cancel")
+      user_selected = input$dl_vars
+      if(is.null(user_selected)) {
+        user_selected = names(d)
+      }
+      
+      showModal(
+        modalDialog(
+          title = "Download data",
+          
+          checkboxGroupInput(
+            "dl_vars", "Select variables to download",
+            choices = names(d), selected = user_selected, inline = TRUE
+          ),
+          actionButton("select_none", "Deselect all"),
+          actionButton("select_all", "Select all"),
+          footer = list(
+            downloadButton("download"),
+            modalButton("Cancel")
+          )
         )
-      ))
+      )
     }) |>
       bindEvent(input$download_modal)
+    
+    observeEvent(input$select_none, {
+      updateCheckboxGroupInput(inputId = "dl_vars", selected = "")  
+    }
+    )
+    
+    observeEvent(input$select_all, {
+      updateCheckboxGroupInput(inputId = "dl_vars", selected = names(d))  
+    }
+    )
     
     output$download = downloadHandler(
       filename = function() {
