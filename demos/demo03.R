@@ -1,7 +1,10 @@
 library(tidyverse)
 library(shiny)
 d = readr::read_csv(here::here("data/weather.csv"))
-
+avail_choices = d |> 
+                  select(city) |>
+                  unique() |>
+                  pull()
 d_vars = d |>
   select(where(is.numeric)) |>
   names()
@@ -13,7 +16,7 @@ shinyApp(
       sidebarPanel(
         radioButtons(
           "city", "Select a city",
-          choices = c("Chicago", "Durham", "Sedona", "New York", "Los Angeles")
+          choices = avail_choices
         ),
         selectInput(
           "var", "Select a variable",
@@ -36,6 +39,12 @@ shinyApp(
     })
     
     output$minmax = renderTable({
+      minmax_names = c("min", "max")
+      names(minmax_names) = c(
+        "min" = paste("min", input$var, sep = "_"), 
+        "max" = paste("max", input$var, sep = "_")
+      )
+      
       d |>
         filter(city %in% input$city) |>
         mutate(
@@ -47,7 +56,9 @@ shinyApp(
           `min` = min(.data[[input$var]]),
           `max` = max(.data[[input$var]]),
           .groups = "drop"
-        )
+        ) |> 
+        rename(!!!minmax_names)
+      
     })
   }
 )

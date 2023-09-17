@@ -1,6 +1,19 @@
 library(tidyverse)
 library(shiny)
 d = readr::read_csv(here::here("data/weather.csv"))
+theme_set(theme_bw())
+avail_choices = d |> 
+                  select(city) |>
+                  unique() |>
+                  pull()
+mydat = d |> select(city, time, temp, source) |> 
+  filter(source == "obs") |>
+  mutate(weekday = lubridate::wday(time, label = TRUE)) |>
+  mutate(date = lubridate::date(time)) |>
+  group_by(city, weekday) |>
+  summarize(min = min(temp), max = max(temp)) |> 
+  ungroup()
+# reactlog::reactlog_enable()
 
 shinyApp(
   ui = fluidPage(
@@ -9,11 +22,12 @@ shinyApp(
       sidebarPanel(
         radioButtons(
           "city", "Select a city",
-          choices = c("Chicago", "Durham", "Sedona", "New York", "Los Angeles")
+          choices = avail_choices
         ),
         checkboxInput("forecast", "Highlight forecasted data", value = FALSE)
       ),
-      mainPanel( plotOutput("plot") )
+      mainPanel( plotOutput("plot") ,
+                 tableOutput("table"))
     )
   ),
   server = function(input, output, session) {
@@ -30,5 +44,13 @@ shinyApp(
           geom_line()
       }
     })
+    
+    output$table = renderTable({
+      filter(mydat, city %in% input$city) |> 
+        select(-city)
+    })
+    
   }
 )
+
+# reactlog::reactlog_disable()

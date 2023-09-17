@@ -1,10 +1,11 @@
 library(tidyverse)
 library(shiny)
 d = readr::read_csv(here::here("data/weather.csv"))
-
-d_vars = d |>
-  select(where(is.numeric)) |>
-  names()
+theme_set(theme_bw())
+avail_choices = d |> 
+                  select(city) |>
+                  unique() |>
+                  pull()
 
 shinyApp(
   ui = fluidPage(
@@ -13,16 +14,17 @@ shinyApp(
       sidebarPanel(
         radioButtons(
           "city", "Select a city",
-          choices = c("Chicago", "Durham", "Sedona", "New York", "Los Angeles")
+          choices = avail_choices
         ),
         selectInput(
           "var", "Select a variable",
-          choices = d_vars, selected = "temp"
+          choices = c()
+          # , 
+          # selected = "temp"
         )
       ),
       mainPanel( 
-        plotOutput("plot"),
-        tableOutput("minmax")
+        plotOutput("plot")
       )
     )
   ),
@@ -33,6 +35,17 @@ shinyApp(
         filter(city %in% input$city)
     })
     
+    observe({
+      updateSelectInput(inputId = "var", choices = d_vars())
+    })
+    
+    d_vars = reactive({
+      d |>
+        select(where(is.numeric)) |>
+        select(where(function(x) var(x) != 0)) |>
+        names()      
+    })  
+
     output$plot = renderPlot({
       d_city() |>
         ggplot(aes(x=time, y=.data[[input$var]], color=city)) +
@@ -40,18 +53,5 @@ shinyApp(
         geom_line()
     })
     
-    output$minmax = renderTable({
-      d_city() |>
-        mutate(
-          day = lubridate::wday(time, label = TRUE, abbr = FALSE),
-          date = as.character(lubridate::date(time))
-        ) |>
-        group_by(date, day) |>
-        summarize(
-          `min` = min(.data[[input$var]]),
-          `max` = max(.data[[input$var]]),
-          .groups = "drop"
-        )
-    })
   }
 )
