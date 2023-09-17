@@ -1,6 +1,8 @@
 library(tidyverse)
 library(shiny)
 d = readr::read_csv(here::here("data/weather.csv"))
+# theme_set(theme_bw())
+
 
 shinyApp(
   ui = fluidPage(
