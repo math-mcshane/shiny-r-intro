@@ -8,11 +8,20 @@ d_vars = d |>
   select(where(is.numeric)) |>
   names()
 
+mcshane_theme = bslib::bs_theme(
+  base_font = font_google("Jost"), 
+  code_font = "Courier New",
+  heading_font = "Jost Black", 
+  font_scale = NULL, 
+  preset = "bootstrap")
+
 thematic::thematic_shiny(bg = "auto", fg = "auto", font = "auto")
+
+
 
 shinyApp(
   ui = fluidPage(
-    theme = bslib::bs_theme(),
+    theme = mcshane_theme,  
     titlePanel("Weather Forecasts"),
     sidebarLayout(
       sidebarPanel(
@@ -39,8 +48,6 @@ shinyApp(
     )
   ),
   server = function(input, output, session) {
-    bslib::bs_themer()
-    
     d_city = reactive({
       req(input$city)
       d |>

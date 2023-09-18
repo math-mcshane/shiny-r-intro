@@ -1,10 +1,10 @@
 library(tidyverse)
 library(shiny)
-d = readr::read_csv(here::here("data/weather.csv"))
-
-d_vars = d |>
-  select(where(is.numeric)) |>
-  names()
+# d = readr::read_csv(here::here("data/weather.csv"))
+# 
+# d_vars = d |>
+#   select(where(is.numeric)) |>
+#   names()
 
 shinyApp(
   ui = fluidPage(
@@ -19,7 +19,8 @@ shinyApp(
         ),
         selectInput(
           "var", "Select a variable",
-          choices = d_vars, selected = "temp"
+          choices = NULL, 
+          selected = NULL
         )
       ),
       mainPanel( 

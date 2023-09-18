@@ -1,24 +1,36 @@
 library(tidyverse)
 library(shiny)
-d = readr::read_csv(here::here("data/weather.csv"))
+library(bslib)
+library(thematic)
+# d = readr::read_csv(here::here("data/weather.csv"))
+theme_set(theme_bw())
+# avail_choices = d |> 
+#                   select(city) |>
+#                   unique() |>
+#                   pull()
 
-d_vars = d |>
-  select(where(is.numeric)) |>
-  names()
+thematic::thematic_shiny()
+
 
 shinyApp(
   ui = fluidPage(
+    theme = bslib::bs_theme(
+      bootswatch = "darkly",
+      base_font = c("Jost")
+    ),
     titlePanel("Weather Forecasts"),
     sidebarLayout(
       sidebarPanel(
+        fileInput("upload", "Upload a file", accept = ".csv"),
         selectInput(
           "city", "Select a city",
-          choices = unique(d$city), selected = "Chicago",
+          choices = c(), 
           multiple = TRUE
         ),
         selectInput(
           "var", "Select a variable",
-          choices = d_vars, selected = "temp"
+          choices = NULL, 
+          selected = NULL
         )
       ),
       mainPanel( 
@@ -28,10 +40,35 @@ shinyApp(
   ),
   server = function(input, output, session) {
     
+    d = reactive({
+      req(input$upload)
+      readr::read_csv(input$upload$datapath)
+    })
+    
     d_city = reactive({
       req(input$city)
-      d |>
+      d() |>
         filter(city %in% input$city)
+    })
+    
+    d_vars = reactive({
+      d() |>
+        select(where(is.numeric)) |>
+        names()
+    })
+    
+    observe({
+      updateSelectInput(
+        inputId = "var", 
+        choices = d_vars(), selected = d_vars()[1]
+      )
+    })
+    
+    observe({
+      updateSelectInput(
+        inputId = "city", 
+        choices = unique(d()$city)
+      )
     })
     
     output$plot = renderPlot({
